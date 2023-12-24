@@ -40,7 +40,7 @@ const Sidebar = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
-        window.location.reload();
+        window.location.href = '/music-player/'; 
         console.log(localStorage.getItem('token'));
     }
 

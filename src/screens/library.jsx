@@ -16,7 +16,7 @@ const Library = () => {
         .catch(err => {
             console.log('error');
             console.log(err);
-            window.location.reload(); 
+            window.location.href = '/music-player/'; 
         })
     }, []);
     const navigate = useNavigate();
