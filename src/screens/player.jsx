@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import apiClient from "../spotify";
 import AudioPlayer from "../components/audioPlayer";
 import Widgets from "../components/widgets";
+import { useSpotifyPlayer } from "../SpotifyPlayerContext";
 
 const AlbumImage = ({ imageSrc }) => {
     return (
@@ -47,10 +48,12 @@ const Queue = ({ tracks, setCurrentTrackIndex }) => {
 
 const Player = () => {
     const location = useLocation();
+    const { player, deviceId } = useSpotifyPlayer();
     const [tracks, setTracks] = useState([]);
     const [currentTrack, setCurrentTrack] = useState({});
     const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-    console.log(currentTrack?.album?.artists[0])
+
+    // Fetch playlist tracks
     useEffect(() => {
         if (location.state) {
             apiClient.get("playlists/" + location.state?.id + "/tracks")
@@ -64,9 +67,43 @@ const Player = () => {
         }
     }, [location.state]);
 
-    useEffect (() => {
+    // Keep currentTrack in sync with currentTrackIndex
+    useEffect(() => {
         setCurrentTrack(tracks[currentTrackIndex]?.track);
-    }, [currentTrackIndex, tracks]); 
+    }, [currentTrackIndex, tracks]);
+
+    // Start playback when the SDK device is ready and tracks are loaded
+    useEffect(() => {
+        if (!deviceId || !location.state?.id || tracks.length === 0) return;
+        apiClient.put(`/me/player/play?device_id=${deviceId}`, {
+            context_uri: `spotify:playlist:${location.state.id}`,
+            offset: { position: 0 },
+        }).catch(console.log);
+    }, [deviceId, tracks]);
+
+    // Sync currentTrackIndex when the SDK advances to the next track
+    useEffect(() => {
+        if (!player || tracks.length === 0) return;
+        const onStateChange = (state) => {
+            if (!state) return;
+            const currentUri = state.track_window.current_track.uri;
+            const idx = tracks.findIndex((t) => t.track?.uri === currentUri);
+            if (idx !== -1) setCurrentTrackIndex(idx);
+        };
+        player.addListener('player_state_changed', onStateChange);
+        return () => player.removeListener('player_state_changed', onStateChange);
+    }, [player, tracks]);
+
+    // Called when user clicks a track in the Queue
+    const handleQueueClick = (index) => {
+        setCurrentTrackIndex(index);
+        if (deviceId && location.state?.id) {
+            apiClient.put(`/me/player/play?device_id=${deviceId}`, {
+                context_uri: `spotify:playlist:${location.state.id}`,
+                offset: { position: index },
+            }).catch(console.log);
+        }
+    }; 
     
     return (
         <div className="flex flex-row pt-5 h-screen">
@@ -75,9 +112,7 @@ const Player = () => {
                     {currentTrack && currentTrack.album?.images[0]?.url ? (
                         <div>
                         <AudioPlayer
-                                currentTrack={currentTrack}
                                 currentIndex={currentTrackIndex}
-                                setCurrentTrackIndex={setCurrentTrackIndex}
                                 total={tracks}   
                             />
                         </div>
@@ -108,7 +143,7 @@ const Player = () => {
                     <div className="pt-5 h-[35%] bg- rounded-2xl ">
                         <Queue 
                         tracks={tracks}
-                        setCurrentTrackIndex={setCurrentTrackIndex}
+                        setCurrentTrackIndex={handleQueueClick}
                         />
                     </div>
                 </div>

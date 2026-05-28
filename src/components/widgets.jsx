@@ -10,9 +10,15 @@ const Widgets = ({ artistID }) => {
     useEffect(() => {
         const fetchRelatedArtists = async () => {
             try {
-                const response = await apiClient.get(`/artists/${artistID}/related-artists`);
-                const a = response.data?.artists.slice(0, 3);
-                if (a) {setSimilar(a);}
+                const artistResponse = await apiClient.get(`/artists/${artistID}`);
+                const genres = artistResponse.data?.genres || [];
+                if (genres.length === 0) return;
+                const genre = genres[0];
+                const searchResponse = await apiClient.get(`/search?q=genre:${encodeURIComponent(genre)}&type=artist&limit=5`);
+                const artists = (searchResponse.data?.artists?.items || [])
+                    .filter((a) => a.id !== artistID)
+                    .slice(0, 3);
+                setSimilar(artists);
             } catch (error) {
                 console.log(error);
             }
