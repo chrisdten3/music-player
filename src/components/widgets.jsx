@@ -8,17 +8,40 @@ const Widgets = ({ artistID }) => {
     const [newReleases, setNewReleases] = useState([]);
 
     useEffect(() => {
+        setSimilar([]);
+        setTopTracks([]);
+
         const fetchRelatedArtists = async () => {
             try {
+                // Get artist name
                 const artistResponse = await apiClient.get(`/artists/${artistID}`);
-                const genres = artistResponse.data?.genres || [];
-                if (genres.length === 0) return;
-                const genre = genres[0];
-                const searchResponse = await apiClient.get(`/search?q=genre:${encodeURIComponent(genre)}&type=artist&limit=5`);
-                const artists = (searchResponse.data?.artists?.items || [])
-                    .filter((a) => a.id !== artistID)
-                    .slice(0, 3);
-                setSimilar(artists);
+                const artistName = artistResponse.data?.name;
+                if (!artistName) return;
+
+                // Find playlists featuring this artist
+                const playlistResponse = await apiClient.get(`/search?q=${encodeURIComponent(artistName)}&type=playlist&limit=3`);
+                const playlists = playlistResponse.data?.playlists?.items || [];
+                if (playlists.length === 0) return;
+
+                // Get tracks from the first playlist to find co-occurring artists
+                const tracksResponse = await apiClient.get(`/playlists/${playlists[0].id}/tracks?limit=30&fields=items(track(artists(id,name)))`);
+                const items = tracksResponse.data?.items || [];
+
+                const seen = new Set([artistID]);
+                const artistIds = [];
+                for (const item of items) {
+                    for (const artist of (item.track?.artists || [])) {
+                        if (!seen.has(artist.id) && artistIds.length < 5) {
+                            seen.add(artist.id);
+                            artistIds.push(artist.id);
+                        }
+                    }
+                }
+                if (artistIds.length === 0) return;
+
+                // Fetch full artist details (includes images)
+                const detailsResponse = await apiClient.get(`/artists?ids=${artistIds.slice(0, 3).join(',')}`);
+                setSimilar(detailsResponse.data?.artists || []);
             } catch (error) {
                 console.log(error);
             }
