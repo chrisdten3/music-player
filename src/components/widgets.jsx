@@ -5,7 +5,6 @@ import WidgetCard from "./widgetCard";
 const Widgets = ({ artistID }) => {
     const [similar, setSimilar] = useState([]);
     const [topTracks, setTopTracks] = useState([]);
-    const [newReleases, setNewReleases] = useState([]);
 
     useEffect(() => {
         setSimilar([]);
@@ -57,19 +56,8 @@ const Widgets = ({ artistID }) => {
             }
         }
 
-        const fetchNewReleases = async () => {
-            try {
-                const response = await apiClient.get(`/browse/new-releases?country=US`);
-                const a = response.data?.albums.items.slice(0, 3);
-                if (a) {setNewReleases(a);}
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
         fetchRelatedArtists();
         fetchTopTracks();
-        fetchNewReleases();
     }, [artistID]); // Make sure to include artistID in the dependency array
 
 

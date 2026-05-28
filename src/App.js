@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from './components/sidebar';
-import Home from './screens/home';
-import Feed from './screens/feed';
-import Favorites from './screens/favorites';
 import Library from './screens/library';
 import Player from './screens/player';
-import Trending from './screens/trending';
 import Stats from './screens/stats';
 import Account from './screens/account';
 import Login from './screens/login';

@@ -49,6 +49,7 @@ const Queue = ({ tracks, setCurrentTrackIndex }) => {
 const Player = () => {
     const location = useLocation();
     const { player, deviceId } = useSpotifyPlayer();
+    const playlistId = location.state?.id;
     const [tracks, setTracks] = useState([]);
     const [currentTrack, setCurrentTrack] = useState({});
     const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -74,12 +75,12 @@ const Player = () => {
 
     // Start playback when the SDK device is ready and tracks are loaded
     useEffect(() => {
-        if (!deviceId || !location.state?.id || tracks.length === 0) return;
+        if (!deviceId || !playlistId || tracks.length === 0) return;
         apiClient.put(`/me/player/play?device_id=${deviceId}`, {
-            context_uri: `spotify:playlist:${location.state.id}`,
+            context_uri: `spotify:playlist:${playlistId}`,
             offset: { position: 0 },
         }).catch(console.log);
-    }, [deviceId, tracks]);
+    }, [deviceId, tracks, playlistId]);
 
     // Sync currentTrackIndex when the SDK advances to the next track
     useEffect(() => {
@@ -97,9 +98,9 @@ const Player = () => {
     // Called when user clicks a track in the Queue
     const handleQueueClick = (index) => {
         setCurrentTrackIndex(index);
-        if (deviceId && location.state?.id) {
+        if (deviceId && playlistId) {
             apiClient.put(`/me/player/play?device_id=${deviceId}`, {
-                context_uri: `spotify:playlist:${location.state.id}`,
+                context_uri: `spotify:playlist:${playlistId}`,
                 offset: { position: index },
             }).catch(console.log);
         }

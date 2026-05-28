@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 //import { AiOutlineMenu, AiOutlineSearch, AiOutlineClose } from "react-icons/ai";
 import {Link} from 'react-router-dom'; 
-import { FaH, FaMusic } from "react-icons/fa6";
-import { IoIosTrendingUp } from "react-icons/io"; //this is the trending icon
-import { IoIosStats } from "react-icons/io"; //this is the stats icon
-import { CiPlay1 } from "react-icons/ci";
+import { IoIosStats } from "react-icons/io";
 import { FaHeart } from "react-icons/fa";
-import { IoIosSettings } from "react-icons/io";
 import apiClient from '../spotify'; // Import your apiClient if not already imported
 import { FaBook } from "react-icons/fa";
 import { IoLogOut } from "react-icons/io5";
@@ -35,9 +31,6 @@ const Sidebar = () => {
         }
     )}, []);
 
-    const [sidebar, setSidebar] = useState(false);
-    const showSidebar = () => setSidebar(!sidebar);
-
     const handleLogout = () => {
         localStorage.removeItem('token');
         window.location.href = '/music-player/'; 
@@ -48,7 +41,7 @@ const Sidebar = () => {
         <div className='fixed left-0 top-0 w-[20%] h-full rounded-sm bg-slate-700 ease-in-out duration-500'>
             {/* Going to have space for the spotify user image here */}
             <div className='flex items-center justify-center p-4 pb-20'>
-                <img src={image} className='rounded-full w-20 h-20' />
+                <img src={image} alt="Profile" className='rounded-full w-20 h-20' />
             </div>
             <div className='flex flex-col items-center justify-center'>
                 <Link to='/player'>
